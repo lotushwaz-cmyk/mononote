@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mononote.app.data.AppStore
 import com.mononote.app.data.EnglishMonths
+import com.mononote.app.data.Holidays
 import com.mononote.app.data.Event
 import com.mononote.app.data.KoreanWeekdays
 import com.mononote.app.data.Lunar
@@ -297,6 +298,7 @@ private fun MonthView(
                 val prefix = if (selected == today) "TODAY · " else ""
                 SmallLabel(prefix + "%d.%02d ".format(selected.monthValue, selected.dayOfMonth) + selected.dayOfWeek.name.take(3))
                 Spacer(Modifier.weight(1f))
+                Holidays.nameOf(selected)?.let { Text("$it · ", fontSize = 11.sp, color = Mono.Sun) }
                 Text("음 " + lunar.short, fontSize = 11.sp, color = Mono.Sub)
             }
             if (events.isEmpty()) {
@@ -331,9 +333,10 @@ private fun DayCell(
     onClick: () -> Unit,
 ) {
     val sunday = day.dayOfWeek.value == 7
+    val holiday = Holidays.nameOf(day)
     val numColor = when {
         !inMonth -> Mono.Muted
-        sunday -> Mono.Sun
+        sunday || holiday != null -> Mono.Sun
         else -> Mono.Ink
     }
     Column(
@@ -366,7 +369,18 @@ private fun DayCell(
                 color = if (isToday) Color.White else numColor,
             )
         }
-        if (showLunar) {
+        if (holiday != null) {
+            Text(
+                holiday,
+                Modifier.padding(start = 2.dp),
+                fontSize = if (holiday.length > 4) 9.sp else 10.sp,
+                lineHeight = 11.sp,
+                letterSpacing = (-0.3).sp,
+                color = if (inMonth) Mono.Sun else Mono.Muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        } else if (showLunar) {
             Text(
                 Lunar.of(day).short,
                 Modifier.padding(start = 2.dp),

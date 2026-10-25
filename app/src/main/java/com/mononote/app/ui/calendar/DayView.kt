@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mononote.app.data.AppStore
 import com.mononote.app.data.EnglishWeekdays
+import com.mononote.app.data.Holidays
 import com.mononote.app.data.Event
 import com.mononote.app.data.KoreanWeekdays
 import com.mononote.app.data.Lunar
@@ -91,6 +92,7 @@ fun DayView(
             )
             Column(Modifier.padding(start = 12.dp, bottom = 4.dp)) {
                 SmallLabel(EnglishWeekdays[selected.dayOfWeek.value - 1] + " · 음 " + lunar.short)
+                Holidays.nameOf(selected)?.let { Text(it, fontSize = 12.sp, color = Mono.Sun) }
                 Text("${selected.year}년 ${selected.monthValue}월", fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.weight(1f))
@@ -123,7 +125,7 @@ fun DayView(
                 for (i in 0..6) {
                     val d = weekStart.plusDays(i.toLong())
                     val on = d == selected
-                    val sunday = i == 0
+                    val sunday = i == 0 || Holidays.isHoliday(d)
                     Column(
                         Modifier
                             .weight(1f)
