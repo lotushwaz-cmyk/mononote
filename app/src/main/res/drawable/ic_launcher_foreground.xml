@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 흰 종이 위에 검정이 반쯤 덮인 모양 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,34h28a4,4 0 0 1 4,4v32a4,4 0 0 1 -4,4h-28a4,4 0 0 1 -4,-4v-32a4,4 0 0 1 4,-4z" />
+    <path
+        android:fillColor="#111111"
+        android:pathData="M40,34h14v40h-14a4,4 0 0 1 -4,-4v-32a4,4 0 0 1 4,-4z" />
+    <path
+        android:fillColor="#5A5A5A"
+        android:pathData="M51,49h2v10h-2z" />
+</vector>

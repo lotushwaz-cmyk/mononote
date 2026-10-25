@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 이하 자동 백업 규칙: 일정·일기·아카이브(data.json)와 사진(images/)을 구글 계정에 백업 -->
+<full-backup-content>
+    <include domain="file" path="data.json" />
+    <include domain="file" path="images/" />
+</full-backup-content>
