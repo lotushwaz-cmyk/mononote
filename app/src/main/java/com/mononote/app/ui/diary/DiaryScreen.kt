@@ -118,7 +118,7 @@ fun DiaryScreen(store: AppStore, date: LocalDate, onDateChange: (LocalDate) -> U
 
     Column(Modifier.fillMaxSize().imePadding()) {
         Row(
-            Modifier.fillMaxWidth().height(72.dp).padding(start = 22.dp, end = 10.dp),
+            Modifier.fillMaxWidth().height(if (editing) 52.dp else 64.dp).padding(start = 22.dp, end = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             SmallLabel("DIARY")
@@ -135,7 +135,8 @@ fun DiaryScreen(store: AppStore, date: LocalDate, onDateChange: (LocalDate) -> U
 
         BoxWithConstraints(
             Modifier
-                .padding(horizontal = 14.dp)
+                .padding(horizontal = 10.dp)
+                .padding(bottom = if (editing) 8.dp else 0.dp)
                 .weight(1f)
                 .fillMaxWidth()
                 .outlinedBox(),
@@ -220,7 +221,7 @@ fun DiaryScreen(store: AppStore, date: LocalDate, onDateChange: (LocalDate) -> U
             }
         }
 
-        Row(
+        if (!editing) Row(
             Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 22.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -272,14 +273,14 @@ private fun DiaryLayer(
     val fg = if (dark) Mono.CoverText else Mono.Ink
     val sub = if (dark) Mono.CoverSub else Mono.Sub
     val placeholder = if (dark) "덮은 자리에 새로 써 보세요" else "오늘은 어떤 하루였나요?"
-    val bodyStyle = TextStyle(fontSize = 15.sp, lineHeight = 28.sp, color = fg)
+    val bodyStyle = TextStyle(fontSize = 17.sp, lineHeight = 30.sp, color = fg)
 
     Column(
-        Modifier.fillMaxSize().background(bg).padding(horizontal = 22.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        Modifier.fillMaxSize().background(bg).padding(horizontal = 18.dp, vertical = if (editable) 14.dp else 20.dp),
+        verticalArrangement = Arrangement.spacedBy(if (editable) 10.dp else 14.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(date.koFull(), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = fg)
+            Text(date.koFull(), fontSize = if (editable) 17.sp else 20.sp, fontWeight = FontWeight.Bold, color = fg)
             Text(
                 if (dark) "덮어 쓴 글 · ${index}겹" else "${date.koWeekday()}요일 · ${Lunar.of(date).long}",
                 fontSize = 12.sp,

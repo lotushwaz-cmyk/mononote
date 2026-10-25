@@ -17,7 +17,7 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 class WrongPasswordException : Exception("비밀번호가 맞지 않아요")
-class InvalidBackupException : Exception("모노 노트 백업 파일이 아니에요")
+class InvalidBackupException : Exception("겹 백업 파일이 아니에요")
 
 /**
  * 백업 파일 = data.json + images/ 를 묶은 zip.

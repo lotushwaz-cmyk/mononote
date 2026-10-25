@@ -101,7 +101,7 @@ fun SettingsScreen(store: AppStore, onBack: () -> Unit) {
             }.onFailure { e ->
                 when (e) {
                     is WrongPasswordException -> importError = "비밀번호가 맞지 않아요"
-                    is InvalidBackupException -> { importBytes = null; toast("모노 노트 백업 파일이 아니에요") }
+                    is InvalidBackupException -> { importBytes = null; toast("겹 백업 파일이 아니에요") }
                     else -> { importBytes = null; toast("파일을 읽지 못했어요") }
                 }
             }
@@ -203,7 +203,7 @@ fun SettingsScreen(store: AppStore, onBack: () -> Unit) {
                 TextButtonMono("저장 위치 고르기", bold = true) {
                     if (mismatch) return@TextButtonMono
                     askExportPassword = false
-                    val name = "mononote-backup-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".mnbak"
+                    val name = "gyeop-backup-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".mnbak"
                     createDoc.launch(name)
                 }
             },

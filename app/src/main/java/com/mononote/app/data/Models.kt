@@ -56,9 +56,24 @@ enum class ArchiveType(val label: String, val imageLabel: String) {
 }
 
 @Serializable
+enum class ArchiveShape(val label: String) {
+    POSTER("세로형"),
+    SQUARE("정사각형"),
+}
+
+/** 감상 기록 카테고리 (영화, 드라마 … 사용자가 추가·수정 가능) */
+@Serializable
+data class ArchiveCategory(
+    val id: String,
+    val name: String,
+    val shape: ArchiveShape = ArchiveShape.POSTER,
+)
+
+@Serializable
 data class ArchiveItem(
     val id: String,
-    val type: ArchiveType,
+    /** ArchiveCategory.id, 빈 문자열이면 미분류 */
+    val categoryId: String = "",
     val title: String,
     /** 감상 날짜 (epochDay) */
     val date: Long,
@@ -66,6 +81,23 @@ data class ArchiveItem(
     val rating: Int = 0,
     /** images 폴더 안 파일 이름 */
     val image: String? = null,
+    /** 첫 버전 데이터 호환용 (불러올 때 categoryId 로 옮겨짐) */
+    val type: ArchiveType? = null,
+)
+
+fun defaultArchiveCategories() = listOf(
+    ArchiveCategory("MOVIE", "영화"),
+    ArchiveCategory("DRAMA", "드라마"),
+    ArchiveCategory("SHOW", "예능"),
+    ArchiveCategory("MUSIC", "음악", ArchiveShape.SQUARE),
+    ArchiveCategory("BOOK", "책"),
+)
+
+/** 예전 형식 데이터를 새 형식으로 정리 */
+fun AppData.migrated(): AppData = copy(
+    archive = archive.map {
+        if (it.categoryId.isEmpty() && it.type != null) it.copy(categoryId = it.type.name, type = null) else it
+    },
 )
 
 @Serializable
@@ -80,6 +112,7 @@ data class AppData(
     val events: List<Event> = emptyList(),
     val diaries: List<DiaryEntry> = emptyList(),
     val archive: List<ArchiveItem> = emptyList(),
+    val archiveCategories: List<ArchiveCategory> = defaultArchiveCategories(),
     val settings: Settings = Settings(),
 )
 

@@ -1,17 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 흰 종이 위에 검정이 반쯤 덮인 모양 -->
+<!-- 검정 바탕 위 흰 노트: 왼쪽 스프링, 가로줄, 책갈피 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- 노트 종이 -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M40,34h28a4,4 0 0 1 4,4v32a4,4 0 0 1 -4,4h-28a4,4 0 0 1 -4,-4v-32a4,4 0 0 1 4,-4z" />
-    <path
-        android:fillColor="#111111"
-        android:pathData="M40,34h14v40h-14a4,4 0 0 1 -4,-4v-32a4,4 0 0 1 4,-4z" />
-    <path
-        android:fillColor="#5A5A5A"
-        android:pathData="M51,49h2v10h-2z" />
+        android:pathData="M40,27h30a4,4 0 0 1 4,4v46a4,4 0 0 1 -4,4h-30a4,4 0 0 1 -4,-4v-46a4,4 0 0 1 4,-4z" />
+    <!-- 스프링 -->
+    <path android:fillColor="#9A9A9A" android:pathData="M32.5,33h8a1.5,1.5 0 0 1 0,3h-8a1.5,1.5 0 0 1 0,-3z" />
+    <path android:fillColor="#9A9A9A" android:pathData="M32.5,43h8a1.5,1.5 0 0 1 0,3h-8a1.5,1.5 0 0 1 0,-3z" />
+    <path android:fillColor="#9A9A9A" android:pathData="M32.5,53h8a1.5,1.5 0 0 1 0,3h-8a1.5,1.5 0 0 1 0,-3z" />
+    <path android:fillColor="#9A9A9A" android:pathData="M32.5,63h8a1.5,1.5 0 0 1 0,3h-8a1.5,1.5 0 0 1 0,-3z" />
+    <path android:fillColor="#9A9A9A" android:pathData="M32.5,73h8a1.5,1.5 0 0 1 0,3h-8a1.5,1.5 0 0 1 0,-3z" />
+    <!-- 가로줄 -->
+    <path android:fillColor="#CFCFCF" android:pathData="M47,46h20v2h-20z" />
+    <path android:fillColor="#CFCFCF" android:pathData="M47,53h20v2h-20z" />
+    <path android:fillColor="#CFCFCF" android:pathData="M47,60h20v2h-20z" />
+    <path android:fillColor="#CFCFCF" android:pathData="M47,67h14v2h-14z" />
+    <!-- 책갈피 -->
+    <path android:fillColor="#111111" android:pathData="M62,27h6v14l-3,-3l-3,3z" />
 </vector>

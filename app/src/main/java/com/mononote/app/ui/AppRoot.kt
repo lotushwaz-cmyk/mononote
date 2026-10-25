@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +42,7 @@ import java.time.LocalDate
 
 enum class Tab { CALENDAR, DIARY, ARCHIVE }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AppRoot(store: AppStore) {
     var tab by rememberSaveable { mutableStateOf(Tab.CALENDAR) }
@@ -55,11 +59,13 @@ fun AppRoot(store: AppStore) {
 
     if (tab != Tab.CALENDAR) BackHandler { tab = Tab.CALENDAR }
 
+    // 키보드가 올라오면 하단 탭을 숨겨 글 쓰는 칸을 넓게
+    val imeVisible = WindowInsets.isImeVisible
     Scaffold(
         containerColor = Mono.Bg,
-        bottomBar = { BottomBar(tab) { tab = it } },
+        bottomBar = { if (!imeVisible) BottomBar(tab) { tab = it } },
     ) { pad ->
-        Box(Modifier.padding(pad).fillMaxSize()) {
+        Box(Modifier.padding(pad).consumeWindowInsets(pad).fillMaxSize()) {
             when (tab) {
                 Tab.CALENDAR -> CalendarScreen(
                     store = store,

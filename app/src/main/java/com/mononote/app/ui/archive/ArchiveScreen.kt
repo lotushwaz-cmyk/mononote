@@ -37,9 +37,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.mononote.app.data.AppData
 import com.mononote.app.data.AppStore
+import com.mononote.app.data.ArchiveCategory
 import com.mononote.app.data.ArchiveItem
-import com.mononote.app.data.ArchiveType
+import com.mononote.app.data.ArchiveShape
 import com.mononote.app.data.dotted
 import com.mononote.app.ui.AddButton
 import com.mononote.app.ui.Chip
@@ -56,16 +58,29 @@ private sealed interface ArchiveEdit {
     data class Existing(val item: ArchiveItem) : ArchiveEdit
 }
 
+/** 미분류를 뜻하는 필터 값 */
+const val UNCATEGORIZED = ""
+
+fun AppData.archiveCategory(id: String): ArchiveCategory? = archiveCategories.firstOrNull { it.id == id }
+
 @Composable
 fun ArchiveScreen(store: AppStore) {
-    var filter by rememberSaveable { mutableStateOf<ArchiveType?>(null) }
+    // null = 전체, "" = 미분류, 그 외 = 카테고리 id
+    var filter by rememberSaveable { mutableStateOf<String?>(null) }
     var searching by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var editing by remember { mutableStateOf<ArchiveEdit?>(null) }
+    var managing by remember { mutableStateOf(false) }
 
-    val all = store.data.archive.sortedWith(compareByDescending<ArchiveItem> { it.date }.thenBy { it.title })
+    val data = store.data
+    val categories = data.archiveCategories
+    val all = data.archive.sortedWith(compareByDescending<ArchiveItem> { it.date }.thenBy { it.title })
+    val validIds = categories.map { it.id }.toSet()
+    fun catOf(item: ArchiveItem) = if (item.categoryId in validIds) item.categoryId else UNCATEGORIZED
+    val uncategorized = all.count { catOf(it) == UNCATEGORIZED }
+    val activeFilter = filter?.takeIf { it == UNCATEGORIZED && uncategorized > 0 || it in validIds }
     val shown = all
-        .filter { filter == null || it.type == filter }
+        .filter { activeFilter == null || catOf(it) == activeFilter }
         .filter { query.isBlank() || it.title.contains(query.trim(), ignoreCase = true) }
 
     Box(Modifier.fillMaxSize()) {
@@ -112,10 +127,14 @@ fun ArchiveScreen(store: AppStore) {
                     contentPadding = PaddingValues(horizontal = 14.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    item { Chip("전체 ${all.size}", filter == null) { filter = null } }
-                    items(ArchiveType.entries) { t ->
-                        Chip("${t.label} ${all.count { it.type == t }}", filter == t) { filter = t }
+                    item { Chip("전체 ${all.size}", activeFilter == null) { filter = null } }
+                    items(categories, key = { it.id }) { c ->
+                        Chip("${c.name} ${all.count { catOf(it) == c.id }}", activeFilter == c.id) { filter = c.id }
                     }
+                    if (uncategorized > 0) {
+                        item { Chip("미분류 $uncategorized", activeFilter == UNCATEGORIZED) { filter = UNCATEGORIZED } }
+                    }
+                    item { Chip("+ 편집", false) { managing = true } }
                 }
             }
             if (shown.isEmpty()) {
@@ -130,7 +149,7 @@ fun ArchiveScreen(store: AppStore) {
                 }
             }
             items(shown, key = { it.id }) { item ->
-                ArchiveCard(store, item) { editing = ArchiveEdit.Existing(item) }
+                ArchiveCard(store, item, data.archiveCategory(item.categoryId)) { editing = ArchiveEdit.Existing(item) }
             }
         }
         AddButton(
@@ -141,13 +160,17 @@ fun ArchiveScreen(store: AppStore) {
 
     when (val e = editing) {
         null -> Unit
-        ArchiveEdit.New -> ArchiveEditor(store, null, filter ?: ArchiveType.MOVIE) { editing = null }
-        is ArchiveEdit.Existing -> ArchiveEditor(store, e.item, e.item.type) { editing = null }
+        ArchiveEdit.New -> ArchiveEditor(
+            store, null,
+            activeFilter?.takeIf { it != UNCATEGORIZED } ?: categories.firstOrNull()?.id ?: UNCATEGORIZED,
+        ) { editing = null }
+        is ArchiveEdit.Existing -> ArchiveEditor(store, e.item, e.item.categoryId) { editing = null }
     }
+    if (managing) ArchiveCategoryManager(store) { managing = false }
 }
 
 @Composable
-private fun ArchiveCard(store: AppStore, item: ArchiveItem, onClick: () -> Unit) {
+private fun ArchiveCard(store: AppStore, item: ArchiveItem, category: ArchiveCategory?, onClick: () -> Unit) {
     Row(
         Modifier
             .padding(horizontal = 14.dp)
@@ -157,13 +180,13 @@ private fun ArchiveCard(store: AppStore, item: ArchiveItem, onClick: () -> Unit)
             .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Cover(store, item.image, item.type, width = 88.dp)
+        Cover(store, item.image, category?.shape ?: ArchiveShape.POSTER, width = 88.dp)
         Column(
             Modifier.weight(1f).padding(vertical = 4.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                item.type.label,
+                category?.name ?: "미분류",
                 Modifier
                     .border(1.dp, Mono.Box, RoundedCornerShape(10.dp))
                     .padding(horizontal = 8.dp, vertical = 2.dp),
@@ -178,24 +201,24 @@ private fun ArchiveCard(store: AppStore, item: ArchiveItem, onClick: () -> Unit)
     }
 }
 
-/** 포스터/앨범/표지 이미지. 음악은 정사각형, 나머지는 세로 포스터 비율 */
+/** 이미지. 정사각형 카테고리(음악 등)는 정사각, 나머지는 세로 포스터 비율 */
 @Composable
-fun Cover(store: AppStore, image: String?, type: ArchiveType, width: Dp) {
-    val height = if (type == ArchiveType.MUSIC) width else width * 1.41f
-    val shape = RoundedCornerShape(10.dp)
+fun Cover(store: AppStore, image: String?, shape: ArchiveShape, width: Dp) {
+    val height = if (shape == ArchiveShape.SQUARE) width else width * 1.41f
+    val clip = RoundedCornerShape(10.dp)
     if (image != null) {
         AsyncImage(
             model = store.imageFile(image),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.size(width, height).clip(shape).background(Mono.Soft),
+            modifier = Modifier.size(width, height).clip(clip).background(Mono.Soft),
         )
     } else {
         Box(
-            Modifier.size(width, height).clip(shape).background(Mono.Soft),
+            Modifier.size(width, height).clip(clip).background(Mono.Soft),
             contentAlignment = Alignment.Center,
         ) {
-            Text(type.imageLabel, fontSize = 11.sp, color = Mono.Muted)
+            Text("이미지", fontSize = 11.sp, color = Mono.Muted)
         }
     }
 }

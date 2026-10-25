@@ -31,7 +31,7 @@ class AppStore(private val context: Context) {
         private set
 
     private fun load(): AppData = try {
-        if (dataFile.exists()) json.decodeFromString(AppData.serializer(), dataFile.readText()) else AppData()
+        if (dataFile.exists()) json.decodeFromString(AppData.serializer(), dataFile.readText()).migrated() else AppData()
     } catch (e: Exception) {
         AppData()
     }
@@ -54,7 +54,7 @@ class AppStore(private val context: Context) {
 
     fun encode(d: AppData = data): String = json.encodeToString(AppData.serializer(), d)
 
-    fun decode(text: String): AppData = json.decodeFromString(AppData.serializer(), text)
+    fun decode(text: String): AppData = json.decodeFromString(AppData.serializer(), text).migrated()
 
     /** 백업 복원: 데이터 전체를 바꾸고 바로 저장 */
     fun replaceAll(newData: AppData) {
