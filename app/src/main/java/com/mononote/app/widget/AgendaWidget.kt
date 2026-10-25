@@ -14,6 +14,8 @@ import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.SizeMode
+import androidx.glance.LocalSize
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -53,10 +55,18 @@ class AgendaWidget : GlanceAppWidget() {
     private data class WidgetEvent(val text: String, val color: Color)
     private data class WidgetDay(val date: LocalDate, val events: List<WidgetEvent>)
 
+    // 위젯 크기에 맞춰 작게(오늘만)/목록 모양을 바꾼다
+    override val sizeMode: SizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val store = (context.applicationContext as? MonoApp)?.store ?: AppStore(context.applicationContext)
         val days = buildDays(store.data)
-        provideContent { Content(context, days) }
+        val opacity = store.data.settings.widgetOpacity.coerceIn(0f, 1f)
+        provideContent {
+            val size = LocalSize.current
+            val compact = size.width < 200.dp || size.height < 150.dp
+            Content(context, days, opacity, compact)
+        }
     }
 
     private fun timeLabel(min: Int): String {
@@ -83,7 +93,7 @@ class AgendaWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun Content(context: Context, days: List<WidgetDay>) {
+    private fun Content(context: Context, days: List<WidgetDay>, opacity: Float, compact: Boolean) {
         val white = ColorProvider(Color(0xFFF2F2F2))
         val sub = ColorProvider(Color(0xFFA8A8A8))
         val red = ColorProvider(Color(0xFFFF8A80))
@@ -94,11 +104,69 @@ class AgendaWidget : GlanceAppWidget() {
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
         )
 
+        val bg = ColorProvider(Color(0xFF111111).copy(alpha = opacity))
+
+        if (compact) {
+            // 작은 위젯: 오늘 날짜와 오늘 일정만
+            val today = days.first()
+            val holiday = Holidays.nameOf(today.date)
+            Column(
+                GlanceModifier
+                    .fillMaxSize()
+                    .cornerRadius(22.dp)
+                    .background(bg)
+                    .padding(14.dp)
+                    .clickable(openApp),
+            ) {
+                Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(
+                            "${today.date.dayOfMonth}",
+                            style = TextStyle(color = white, fontSize = 30.sp, fontWeight = FontWeight.Bold),
+                        )
+                        Text(
+                            "${today.date.monthValue}월 " + today.date.koWeekday() + "요일",
+                            style = TextStyle(color = if (holiday != null || today.date.dayOfWeek.value == 7) red else sub, fontSize = 11.sp),
+                        )
+                    }
+                    Spacer(GlanceModifier.defaultWeight())
+                    Box(
+                        GlanceModifier.size(32.dp).cornerRadius(16.dp)
+                            .background(ColorProvider(Color(0xFFF2F2F2))).clickable(newEvent),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            provider = ImageProvider(R.drawable.ic_widget_plus),
+                            contentDescription = "일정 추가",
+                            modifier = GlanceModifier.size(16.dp),
+                            colorFilter = ColorFilter.tint(ColorProvider(Color(0xFF111111))),
+                        )
+                    }
+                }
+                Spacer(GlanceModifier.height(8.dp))
+                if (today.events.isEmpty()) {
+                    Text(holiday ?: "일정 없음", style = TextStyle(color = if (holiday != null) red else sub, fontSize = 13.sp))
+                } else {
+                    today.events.take(3).forEach { ev ->
+                        Row(GlanceModifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(GlanceModifier.width(3.dp).height(14.dp).cornerRadius(2.dp).background(ColorProvider(ev.color))) {}
+                            Spacer(GlanceModifier.width(7.dp))
+                            Text(ev.text, maxLines = 1, style = TextStyle(color = white, fontSize = 12.sp))
+                        }
+                    }
+                    if (today.events.size > 3) {
+                        Text("외 ${today.events.size - 3}개", style = TextStyle(color = sub, fontSize = 11.sp))
+                    }
+                }
+            }
+            return
+        }
+
         Box(
             GlanceModifier
                 .fillMaxSize()
                 .cornerRadius(24.dp)
-                .background(ColorProvider(Color(0xE6111111)))
+                .background(bg)
                 .padding(start = 18.dp, end = 14.dp, top = 12.dp, bottom = 4.dp),
         ) {
             LazyColumn(GlanceModifier.fillMaxSize()) {
@@ -183,6 +251,17 @@ class AgendaWidget : GlanceAppWidget() {
     }
 }
 
+/** 보통 (4x2) */
 class AgendaWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = AgendaWidget()
+}
+
+/** 작게 (2x2) */
+class AgendaWidgetSmallReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = AgendaWidget()
+}
+
+/** 크게 (4x4) */
+class AgendaWidgetLargeReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = AgendaWidget()
 }

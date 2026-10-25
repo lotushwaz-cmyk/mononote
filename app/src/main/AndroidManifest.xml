@@ -23,15 +23,37 @@
         </activity>
 
         <receiver
+            android:name=".widget.AgendaWidgetSmallReceiver"
+            android:exported="true"
+            android:label="겹 일정 · 작게">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/agenda_widget_small" />
+        </receiver>
+        <receiver
             android:name=".widget.AgendaWidgetReceiver"
             android:exported="true"
-            android:label="겹 일정">
+            android:label="겹 일정 · 보통">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/agenda_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".widget.AgendaWidgetLargeReceiver"
+            android:exported="true"
+            android:label="겹 일정 · 크게">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/agenda_widget_large" />
         </receiver>
     </application>
 

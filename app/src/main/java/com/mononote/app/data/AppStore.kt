@@ -50,7 +50,7 @@ class AppStore(private val context: Context) {
         val snapshot = data
         io.execute { write(snapshot) }
         // 일정·카테고리가 바뀌면 홈 화면 위젯도 새로 그림
-        if (before.events !== snapshot.events || before.categories !== snapshot.categories) refreshWidget()
+        if (before.events !== snapshot.events || before.categories !== snapshot.categories || before.settings != snapshot.settings) refreshWidget()
     }
 
     fun refreshWidget() {

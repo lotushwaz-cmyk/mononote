@@ -162,6 +162,9 @@ fun SettingsScreen(store: AppStore, onBack: () -> Unit) {
                     OutlineButton("백업 파일 불러오기") { openDoc.launch(arrayOf("*/*")) }
                 }
 
+                LockSection()
+                WidgetSection(store)
+
                 OutlinedBox {
                     SmallLabel("MY DATA")
                     Text(

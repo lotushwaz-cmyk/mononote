@@ -103,6 +103,8 @@ fun AppData.migrated(): AppData = copy(
 @Serializable
 data class Settings(
     val showLunar: Boolean = true,
+    /** 홈 화면 위젯 배경 불투명도 0~1 */
+    val widgetOpacity: Float = 0.9f,
 )
 
 @Serializable
