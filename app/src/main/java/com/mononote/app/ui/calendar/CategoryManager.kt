@@ -50,7 +50,7 @@ import com.mononote.app.ui.TextButtonMono
 /** 카테고리 이름·색 편집. 바꾸는 즉시 저장된다. */
 @Composable
 fun CategoryManager(store: AppStore, onDismiss: () -> Unit) {
-    var expanded by remember { mutableStateOf<String?>(null) }
+    var picking by remember { mutableStateOf<Category?>(null) }
 
     fun edit(id: String, f: (Category) -> Category) =
         store.update { d -> d.copy(categories = d.categories.map { if (it.id == id) f(it) else it }) }
@@ -59,7 +59,7 @@ fun CategoryManager(store: AppStore, onDismiss: () -> Unit) {
         Surface(shape = RoundedCornerShape(18.dp), color = Mono.Bg) {
             Column(Modifier.padding(20.dp)) {
                 Text("카테고리", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Text("색 동그라미를 누르면 색을 바꿀 수 있어요", fontSize = 12.sp, color = Mono.Sub, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
+                Text("색 동그라미를 누르면 색상표에서 원하는 색을 고를 수 있어요", fontSize = 12.sp, color = Mono.Sub, modifier = Modifier.padding(top = 4.dp, bottom = 12.dp))
                 Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                     store.data.categories.forEach { c ->
                         Row(
@@ -72,7 +72,7 @@ fun CategoryManager(store: AppStore, onDismiss: () -> Unit) {
                                     .size(32.dp)
                                     .clip(CircleShape)
                                     .background(Color(c.color))
-                                    .clickable(onClickLabel = "색 바꾸기") { expanded = if (expanded == c.id) null else c.id },
+                                    .clickable(onClickLabel = "색 바꾸기") { picking = c },
                             )
                             Column(Modifier.weight(1f)) {
                                 BasicTextField(
@@ -94,24 +94,6 @@ fun CategoryManager(store: AppStore, onDismiss: () -> Unit) {
                                 }
                             }
                         }
-                        if (expanded == c.id) {
-                            FlowRow(
-                                Modifier.padding(start = 44.dp, bottom = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                CategoryPalette.forEach { col ->
-                                    Box(
-                                        Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(col))
-                                            .then(if (col == c.color) Modifier.border(3.dp, Color.White, CircleShape).border(1.dp, Mono.Ink, CircleShape) else Modifier)
-                                            .clickable { edit(c.id) { it.copy(color = col) }; expanded = null },
-                                    )
-                                }
-                            }
-                        }
                     }
                 }
                 TextButtonMono("+ 카테고리 추가") {
@@ -123,5 +105,16 @@ fun CategoryManager(store: AppStore, onDismiss: () -> Unit) {
                 PrimaryButton("완료", onClick = onDismiss)
             }
         }
+    }
+
+    picking?.let { c ->
+        ColorPickerDialog(
+            initial = c.color,
+            onDismiss = { picking = null },
+            onPick = { col ->
+                edit(c.id) { it.copy(color = col) }
+                picking = null
+            },
+        )
     }
 }
