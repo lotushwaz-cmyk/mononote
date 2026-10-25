@@ -9,6 +9,12 @@ import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.mononote.app.widget.AgendaWidget
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.UUID
@@ -36,10 +42,22 @@ class AppStore(private val context: Context) {
         AppData()
     }
 
+    private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
     fun update(transform: (AppData) -> AppData) {
+        val before = data
         data = transform(data)
         val snapshot = data
         io.execute { write(snapshot) }
+        // 일정·카테고리가 바뀌면 홈 화면 위젯도 새로 그림
+        if (before.events !== snapshot.events || before.categories !== snapshot.categories) refreshWidget()
+    }
+
+    fun refreshWidget() {
+        widgetScope.launch {
+            delay(300)
+            AgendaWidget.refresh(context)
+        }
     }
 
     @Synchronized
@@ -60,6 +78,7 @@ class AppStore(private val context: Context) {
     fun replaceAll(newData: AppData) {
         data = newData
         io.submit(Runnable { write(newData) }).get()
+        refreshWidget()
     }
 
     fun imageFile(name: String) = File(imagesDir, name)

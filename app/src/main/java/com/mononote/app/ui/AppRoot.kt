@@ -44,7 +44,7 @@ enum class Tab { CALENDAR, DIARY, ARCHIVE }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AppRoot(store: AppStore) {
+fun AppRoot(store: AppStore, newEventPending: Boolean = false, onNewEventHandled: () -> Unit = {}) {
     var tab by rememberSaveable { mutableStateOf(Tab.CALENDAR) }
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var diaryDate by rememberSaveable { mutableLongStateOf(LocalDate.now().toEpochDay()) }
@@ -55,6 +55,14 @@ fun AppRoot(store: AppStore) {
             Box(Modifier.padding(pad)) { SettingsScreen(store, onBack = { showSettings = false }) }
         }
         return
+    }
+
+    // 위젯의 + 버튼: 캘린더 탭으로 이동해 새 일정 열기
+    androidx.compose.runtime.LaunchedEffect(newEventPending) {
+        if (newEventPending) {
+            showSettings = false
+            tab = Tab.CALENDAR
+        }
     }
 
     if (tab != Tab.CALENDAR) BackHandler { tab = Tab.CALENDAR }
@@ -69,6 +77,8 @@ fun AppRoot(store: AppStore) {
             when (tab) {
                 Tab.CALENDAR -> CalendarScreen(
                     store = store,
+                    newEventPending = newEventPending,
+                    onNewEventHandled = onNewEventHandled,
                     onOpenSettings = { showSettings = true },
                     onOpenDiary = { day ->
                         diaryDate = day.toEpochDay()

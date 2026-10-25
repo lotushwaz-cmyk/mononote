@@ -13,8 +13,8 @@ android {
         applicationId = "com.mononote.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
     }
 
     // 업데이트해도 같은 앱으로 인식되도록 항상 같은 서명 키를 사용
@@ -60,5 +60,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("androidx.glance:glance-appwidget:1.1.1")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

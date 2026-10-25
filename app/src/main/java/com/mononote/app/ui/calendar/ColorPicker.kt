@@ -27,6 +27,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,13 +65,17 @@ fun ColorPickerDialog(initial: Long, onDismiss: () -> Unit, onPick: (Long) -> Un
     var hue by remember { mutableFloatStateOf(start[0]) }
     var sat by remember { mutableFloatStateOf(start[1]) }
     var value by remember { mutableFloatStateOf(start[2]) }
-    val current = hsvToArgb(hue, sat, value)
-    val density = LocalDensity.current
+    // 색 코드나 기본 색으로 고른 정확한 값 (판/막대를 만지면 해제)
+    var override by remember { mutableStateOf<Long?>(null) }
+    val current = override ?: hsvToArgb(hue, sat, value)
+    var hexText by remember { mutableStateOf("") }
+    var hexFocused by remember { mutableStateOf(false) }
 
     fun setFrom(argb: Long) {
         val hsv = FloatArray(3)
         android.graphics.Color.colorToHSV(argb.toInt(), hsv)
         hue = hsv[0]; sat = hsv[1]; value = hsv[2]
+        override = argb
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -71,9 +83,32 @@ fun ColorPickerDialog(initial: Long, onDismiss: () -> Unit, onPick: (Long) -> Un
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(Modifier.size(36.dp).clip(CircleShape).background(Color(current)))
-                    Column {
+                    Column(Modifier.weight(1f)) {
                         Text("색 고르기", fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                        Text("#%06X".format(current and 0xFFFFFF), fontSize = 12.sp, color = Mono.Sub)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("#", fontSize = 15.sp, color = Mono.Sub)
+                            BasicTextField(
+                                value = if (hexFocused) hexText else "%06X".format(current and 0xFFFFFF),
+                                onValueChange = { v ->
+                                    val clean = v.uppercase().filter { it in "0123456789ABCDEF" }.take(6)
+                                    hexText = clean
+                                    if (clean.length == 6) setFrom(0xFF000000L or clean.toLong(16))
+                                },
+                                singleLine = true,
+                                textStyle = TextStyle(fontSize = 15.sp, color = Mono.Ink, letterSpacing = 1.sp),
+                                cursorBrush = SolidColor(Mono.Ink),
+                                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Characters, keyboardType = KeyboardType.Ascii),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(vertical = 6.dp, horizontal = 2.dp)
+                                    .onFocusChanged {
+                                        if (it.isFocused && !hexFocused) hexText = "%06X".format(current and 0xFFFFFF)
+                                        hexFocused = it.isFocused
+                                    },
+                            )
+                        }
+                        Spacer(Modifier.fillMaxWidth().height(1.dp).background(Mono.Ink))
+                        Text("색 코드를 직접 입력해도 돼요 (예: 3F7D5C)", fontSize = 11.sp, color = Mono.Muted, modifier = Modifier.padding(top = 4.dp))
                     }
                 }
 
@@ -87,6 +122,7 @@ fun ColorPickerDialog(initial: Long, onDismiss: () -> Unit, onPick: (Long) -> Un
                         .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
                         .pointerInput(Unit) {
                             fun set(x: Float, y: Float) {
+                                override = null
                                 sat = (x / size.width).coerceIn(0f, 1f)
                                 value = 1f - (y / size.height).coerceIn(0f, 1f)
                             }
@@ -94,10 +130,12 @@ fun ColorPickerDialog(initial: Long, onDismiss: () -> Unit, onPick: (Long) -> Un
                         }
                         .pointerInput(Unit) {
                             detectDragGestures(onDragStart = {
+                                override = null
                                 sat = (it.x / size.width).coerceIn(0f, 1f)
                                 value = 1f - (it.y / size.height).coerceIn(0f, 1f)
                             }) { change, _ ->
                                 change.consume()
+                                override = null
                                 sat = (change.position.x / size.width).coerceIn(0f, 1f)
                                 value = 1f - (change.position.y / size.height).coerceIn(0f, 1f)
                             }
@@ -123,11 +161,12 @@ fun ColorPickerDialog(initial: Long, onDismiss: () -> Unit, onPick: (Long) -> Un
                         .clip(RoundedCornerShape(14.dp))
                         .background(Brush.horizontalGradient(hues))
                         .pointerInput(Unit) {
-                            detectTapGestures { hue = (it.x / size.width).coerceIn(0f, 0.999f) * 360f }
+                            detectTapGestures { override = null; hue = (it.x / size.width).coerceIn(0f, 0.999f) * 360f }
                         }
                         .pointerInput(Unit) {
                             detectDragGestures { change, _ ->
                                 change.consume()
+                                override = null
                                 hue = (change.position.x / size.width).coerceIn(0f, 0.999f) * 360f
                             }
                         },

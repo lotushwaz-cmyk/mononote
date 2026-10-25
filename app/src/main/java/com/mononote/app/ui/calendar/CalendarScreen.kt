@@ -23,7 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +69,8 @@ private data class EditRequest(val event: Event?, val date: LocalDate, val start
 @Composable
 fun CalendarScreen(
     store: AppStore,
+    newEventPending: Boolean = false,
+    onNewEventHandled: () -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenDiary: (LocalDate) -> Unit,
 ) {
@@ -87,6 +91,14 @@ fun CalendarScreen(
 
     fun defaultStart(d: LocalDate): Int =
         if (d == today) ((LocalTime.now().hour + 1).coerceAtMost(23)) * 60 else 9 * 60
+
+    LaunchedEffect(newEventPending) {
+        if (newEventPending) {
+            onNewEventHandled()
+            select(today)
+            editing = EditRequest(null, today, defaultStart(today))
+        }
+    }
 
     if (dayMode) BackHandler { dayMode = false }
 
