@@ -67,6 +67,7 @@ fun DayView(
     selected: LocalDate,
     today: LocalDate,
     onSelect: (LocalDate) -> Unit,
+    onToday: () -> Unit,
     onMonthMode: () -> Unit,
     onEdit: (Event) -> Unit,
     onNewAt: (Int) -> Unit,
@@ -96,6 +97,10 @@ fun DayView(
                 Text("${selected.year}년 ${selected.monthValue}월", fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
             Spacer(Modifier.weight(1f))
+            if (selected != today) {
+                TodayButton(onToday)
+                Spacer(Modifier.width(8.dp))
+            }
             Row(
                 Modifier.border(1.dp, Mono.Box, RoundedCornerShape(22.dp)).padding(3.dp),
             ) {

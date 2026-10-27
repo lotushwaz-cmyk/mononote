@@ -93,6 +93,21 @@ class AppStore(private val context: Context) {
         null
     }
 
+    /** 인터넷에서 받은 이미지 데이터를 긴 변 1280px JPEG 로 저장 */
+    fun saveImageBytes(bytes: ByteArray): String? = try {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        var sample = 1
+        while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= 1280) sample *= 2
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, BitmapFactory.Options().apply { inSampleSize = sample })
+            ?: throw IllegalArgumentException("이미지가 아니에요")
+        val name = "img_${UUID.randomUUID()}.jpg"
+        imageFile(name).outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 88, it) }
+        name
+    } catch (e: Exception) {
+        null
+    }
+
     fun deleteImage(name: String?) {
         if (name != null) imageFile(name).delete()
     }

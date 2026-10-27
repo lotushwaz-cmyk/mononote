@@ -109,6 +109,7 @@ fun CalendarScreen(
                 selected = selected,
                 today = today,
                 onSelect = ::select,
+                onToday = { select(today) },
                 onMonthMode = { dayMode = false },
                 onEdit = { editing = EditRequest(it, selected, it.startMin) },
                 onNewAt = { editing = EditRequest(null, selected, it) },
@@ -122,6 +123,7 @@ fun CalendarScreen(
                 onSelect = { d -> if (d == selected) dayMode = true else select(d) },
                 onMonthChange = { monthEpoch = it.toEpochDay() },
                 onJump = ::select,
+                onToday = { select(today) },
                 onOpenDay = { dayMode = true },
                 onEdit = { editing = EditRequest(it, selected, it.startMin) },
                 onOpenSettings = onOpenSettings,
@@ -165,6 +167,7 @@ private fun MonthView(
     onSelect: (LocalDate) -> Unit,
     onMonthChange: (LocalDate) -> Unit,
     onJump: (LocalDate) -> Unit,
+    onToday: () -> Unit,
     onOpenDay: () -> Unit,
     onEdit: (Event) -> Unit,
     onOpenSettings: () -> Unit,
@@ -202,6 +205,9 @@ private fun MonthView(
                 }
             }
             Spacer(Modifier.weight(1f))
+            if (selected != today || month.year != today.year || month.month != today.month) {
+                TodayButton(onToday)
+            }
             Row(
                 Modifier
                     .height(44.dp)
@@ -426,5 +432,21 @@ private fun EventRow(ev: Event, color: Color, onClick: () -> Unit) {
         Box(Modifier.size(width = 3.dp, height = 22.dp).clip(RoundedCornerShape(2.dp)).background(color))
         Text(ev.title, Modifier.weight(1f), fontSize = 15.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
         ev.repeatLabel()?.let { Text("↻ $it", fontSize = 11.sp, color = Mono.Sub) }
+    }
+}
+
+/** 오늘로 돌아가기 */
+@Composable
+fun TodayButton(onClick: () -> Unit) {
+    Box(
+        Modifier
+            .height(32.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, Mono.Ink, RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClickLabel = "오늘로 이동", onClick = onClick)
+            .padding(horizontal = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("오늘", fontSize = 13.sp, fontWeight = FontWeight.Medium)
     }
 }

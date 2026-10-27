@@ -68,6 +68,7 @@ fun ArchiveEditor(store: AppStore, original: ArchiveItem?, defaultCategoryId: St
     val addedImages = remember { mutableStateListOf<String>() }
     var askDelete by remember { mutableStateOf(false) }
     var managing by remember { mutableStateOf(false) }
+    var searching by remember { mutableStateOf(false) }
 
     val categories = store.data.archiveCategories
     val shape = store.data.archiveCategory(categoryId)?.shape ?: ArchiveShape.POSTER
@@ -148,12 +149,13 @@ fun ArchiveEditor(store: AppStore, original: ArchiveItem?, defaultCategoryId: St
                         Column(
                             Modifier
                                 .clip(RoundedCornerShape(10.dp))
-                                .clickable(onClickLabel = "이미지 고르기") { pick() },
+                                .clickable(onClickLabel = "구글에서 이미지 찾기") { searching = true },
                         ) {
                             Cover(store, image, shape, width = 120.dp)
                         }
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            TextButtonMono(if (image == null) "이미지 넣기" else "이미지 바꾸기") { pick() }
+                            TextButtonMono(if (image == null) "이미지 넣기" else "이미지 바꾸기") { searching = true }
+                            TextButtonMono("갤러리에서", color = Mono.Sub) { pick() }
                             if (image != null) TextButtonMono("이미지 빼기", color = Mono.Sub) { image = null }
                         }
                     }
@@ -190,4 +192,21 @@ fun ArchiveEditor(store: AppStore, original: ArchiveItem?, defaultCategoryId: St
         )
     }
     if (managing) ArchiveCategoryManager(store) { managing = false }
+    if (searching) {
+        val catName = store.data.archiveCategory(categoryId)?.name ?: ""
+        val word = when (shape) {
+            ArchiveShape.SQUARE -> "앨범 커버"
+            ArchiveShape.POSTER -> if (catName == "책") "표지" else "포스터"
+        }
+        ImageSearchDialog(
+            store = store,
+            initialQuery = if (title.isBlank()) "" else "${title.trim()} $word",
+            onPicked = { name ->
+                addedImages.add(name)
+                image = name
+                searching = false
+            },
+            onDismiss = { searching = false },
+        )
+    }
 }
