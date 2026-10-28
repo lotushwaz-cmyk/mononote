@@ -40,7 +40,7 @@ import com.mononote.app.ui.diary.DiaryScreen
 import com.mononote.app.ui.settings.SettingsScreen
 import java.time.LocalDate
 
-enum class Tab { CALENDAR, DIARY, ARCHIVE }
+enum class Tab { CALENDAR, DIARY, HABIT, ARCHIVE }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -90,6 +90,7 @@ fun AppRoot(store: AppStore, newEventPending: Boolean = false, onNewEventHandled
                     date = LocalDate.ofEpochDay(diaryDate),
                     onDateChange = { diaryDate = it.toEpochDay() },
                 )
+                Tab.HABIT -> com.mononote.app.ui.habit.HabitScreen(store)
                 Tab.ARCHIVE -> ArchiveScreen(store)
             }
         }
@@ -104,6 +105,7 @@ private fun BottomBar(current: Tab, onSelect: (Tab) -> Unit) {
             listOf(
                 Triple(Tab.CALENDAR, MonoIcons.Calendar, "캘린더"),
                 Triple(Tab.DIARY, MonoIcons.Diary, "일기"),
+                Triple(Tab.HABIT, MonoIcons.Habit, "습관"),
                 Triple(Tab.ARCHIVE, MonoIcons.Archive, "아카이브"),
             ).forEach { (t, icon, label) ->
                 val on = t == current

@@ -115,6 +115,7 @@ data class AppData(
     val diaries: List<DiaryEntry> = emptyList(),
     val archive: List<ArchiveItem> = emptyList(),
     val archiveCategories: List<ArchiveCategory> = defaultArchiveCategories(),
+    val habits: List<Habit> = emptyList(),
     val settings: Settings = Settings(),
 )
 
@@ -128,4 +129,25 @@ fun defaultCategories() = listOf(
 val CategoryPalette: List<Long> = listOf(
     0xFF3F7D5C, 0xFFD9822B, 0xFF3A6EA5, 0xFFC0392B, 0xFF8E5BB5,
     0xFF2E8B8B, 0xFFB5874A, 0xFFD15E8C, 0xFF5E5E5E, 0xFF111111,
+)
+
+@Serializable
+enum class HabitGoal(val label: String) {
+    DAILY("매일"),
+    DAYS("요일 선택"),
+    TIMES("주 N회"),
+}
+
+/** 습관. done 에는 지킨 날짜(epochDay)가 들어간다. */
+@Serializable
+data class Habit(
+    val id: String,
+    val name: String,
+    val color: Long,
+    val goal: HabitGoal = HabitGoal.DAILY,
+    /** 요일 선택일 때 (1=월 … 7=일) */
+    val weekDays: Set<Int> = (1..7).toSet(),
+    /** 주 N회일 때 N */
+    val timesPerWeek: Int = 3,
+    val done: Set<Long> = emptySet(),
 )
