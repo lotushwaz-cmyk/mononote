@@ -13,8 +13,8 @@ android {
         applicationId = "com.mononote.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "1.8"
     }
 
     // 업데이트해도 같은 앱으로 인식되도록 항상 같은 서명 키를 사용

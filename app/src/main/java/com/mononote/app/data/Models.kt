@@ -116,6 +116,7 @@ data class AppData(
     val archive: List<ArchiveItem> = emptyList(),
     val archiveCategories: List<ArchiveCategory> = defaultArchiveCategories(),
     val habits: List<Habit> = emptyList(),
+    val money: List<MoneyEntry> = emptyList(),
     val settings: Settings = Settings(),
 )
 
@@ -150,4 +151,16 @@ data class Habit(
     /** 주 N회일 때 N */
     val timesPerWeek: Int = 3,
     val done: Set<Long> = emptySet(),
+)
+
+/** 가계부 한 줄. amount 는 항상 양수, income 으로 수입/지출 구분 */
+@Serializable
+data class MoneyEntry(
+    val id: String,
+    val date: Long,
+    val title: String,
+    val amount: Long,
+    val income: Boolean = false,
+    /** 같은 날짜 안에서 적은 순서 */
+    val createdAt: Long = 0,
 )
